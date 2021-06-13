@@ -4,7 +4,7 @@ import csv
 from datetime import datetime
 
 GUI = Tk()
-GUI.title('Program calculation expense vr.2')
+GUI.title('Program calculation expense vr.2.0.1')
 GUI.geometry('1000x800')
 
 
