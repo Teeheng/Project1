@@ -94,7 +94,9 @@ def Save(event=None):
 
 	today = datetime.now().strftime('%a')
 	print(today)
-	dt = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+	stamp = datetime.now()
+	dt = stamp.strftime('%Y-%m-%d %H:%M:%S')
+	transactionid = stamp.strftime('%Y%m%d%H%M%f')
 	dt = days[today] + '-' + dt
 	print(type(v_price))
 	
@@ -110,7 +112,7 @@ def Save(event=None):
 
 		with open('homework.csv', 'a', encoding='utf-8', newline='') as f:
 			fw = csv.writer(f)
-			data = [name, price, quantity, total, dt]
+			data = [transactionid, name, price, quantity, total, dt]
 			fw.writerow(data)
 		E1.focus()
 		update_table()
@@ -147,23 +149,75 @@ def read_csv():
 #print(rs)
 
 L = ttk.Label(T2, text='table of result', font=Font1).pack(pady=20)
-header = ['รายการ', 'ค่าใช้จ่าย', 'จำนวน', 'รวม','วัน-เวลา']
+header = ['รหัส','รายการ', 'ค่าใช้จ่าย', 'จำนวน', 'รวม','วัน-เวลา']
 resulttable = ttk.Treeview(T2, columns=header, show='headings',height=20)
 resulttable.pack()
 
 for h in header:
 	resulttable.heading(h, text=h)
 
-headwidth = [170,80,80,80,150]
+headwidth = [170,170,80,80,80,150]
 for h,w in zip(header, headwidth):
 	resulttable.column(h, width=w)
 
+alltransaction = {}
+
+def UpdateCSV():
+	with open('homework.csv','w', newline='', encoding='utf-8') as f:
+		fw = csv.writer(f)
+		data = list(alltransaction.values())
+		fw.writerows(data)
+		print('Table was updated')
+		
+
+def DeleteRecord(event=None):
+	check = messagebox.askyesno('confirm?','ต้องการลบ?')
+	print('YES/NO:', check)
+
+	if check == True:
+		print('delete')
+		select = resulttable.selection()
+		print(select)
+		data = resulttable.item(select)
+		data = data['values']
+		transactionid = data[0]
+		print(transactionid)
+		del alltransaction[str(transactionid)]
+		print(alltransaction)
+		UpdateCSV()
+		update_table()
+	else:
+		print('cancel')
+
+Bdelete = ttk.Button(T2, text='ลบ', command = DeleteRecord)
+Bdelete.pack()
+
+resulttable.bind('<Delete>',DeleteRecord)
+
 def update_table():
 	resulttable.delete(*resulttable.get_children())
-	data = read_csv()
-	print(data)
-	for i in data:
-		resulttable.insert('',0,value=i)
+	try:
+		data = read_csv()
+		#print(data)
+		for i in data:
+			alltransaction[i[0]] = i
+			resulttable.insert('',0,value=i)
+		print(alltransaction)
+	except:
+		print('No File')
+
+###right click menu###
+rightclick = Menu(GUI, tearoff=0) #tearoff = 0 ดึงออกมาเป็นหน้าต่างใหม่ไม่ได้
+rightclick.add_command(label='Edit')
+rightclick.add_command(label='Delete', command=DeleteRecord)
+
+def menupopup(event):
+	#print(event.x_root, event.y_root)
+	rightclick.post(event.x_root, event.y_root)
+
+
+resulttable.bind('<Button-3>', menupopup)
+
 
 update_table()
 print('GET CHILD', resulttable.get_children())
